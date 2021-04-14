@@ -7,8 +7,6 @@ import static org.hamcrest.Matchers.*;
 import static io.restassured.RestAssured.given;
 
 public class GithubAPITests {
-    private long projectId = 12201082;
-
     @Test
     public void getUsers() {
         User[] users = given()
@@ -23,6 +21,19 @@ public class GithubAPITests {
 
     @Test
     public void updateUserProject() {
+        JSONObject createProjectBody = new JSONObject();
+        createProjectBody.put("name", "rest-assured-create");
+
+        Project project = given()
+                .header("Authorization", "token")
+                .header("Accept", "application/vnd.github.inertia-preview+json")
+                .body(createProjectBody.toJSONString())
+                .post("https://api.github.com/user/projects")
+                .then()
+                .extract().as(Project.class);
+
+        long projectId = project.id;
+
         JSONObject jsonBody = new JSONObject();
         jsonBody.put("name", "closed-rest-assured-test-project");
         jsonBody.put("state", "closed");
@@ -31,7 +42,7 @@ public class GithubAPITests {
                 .header("Authorization", "token")
                 .header("Accept", "application/vnd.github.inertia-preview+json")
                 .body(jsonBody.toJSONString())
-                .patch(String.format("https://api.github.com/projects/%s", this.projectId))
+                .patch(String.format("https://api.github.com/projects/%s", projectId))
                 .then()
                 .statusCode(200)
                 .extract()
@@ -57,15 +68,27 @@ public class GithubAPITests {
                 .as(Project.class);
 
         assertThat(project.name, equalTo("rest-assured-test-project"));
-        this.projectId = project.id;
     }
 
     @Test
     public void deleteUserProject() {
+        JSONObject createProjectBody = new JSONObject();
+        createProjectBody.put("name", "rest-assured-create");
+
+        Project project = given()
+                .header("Authorization", "token")
+                .header("Accept", "application/vnd.github.inertia-preview+json")
+                .body(createProjectBody.toJSONString())
+                .post("https://api.github.com/user/projects")
+                .then()
+                .extract().as(Project.class);
+
+        long projectId = project.id;
+
         given()
                 .header("Authorization", "token")
                 .header("Accept", "application/vnd.github.inertia-preview+json")
-                .delete(String.format("https://api.github.com/projects/%s", this.projectId))
+                .delete(String.format("https://api.github.com/projects/%s", projectId))
                 .then()
                 .statusCode(204);
     }

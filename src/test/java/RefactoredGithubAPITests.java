@@ -12,6 +12,9 @@ public class RefactoredGithubAPITests {
     public void getUsers() {
         User[] users = new GithubAPIRequestService()
                 .getUsersRequest()
+                .then()
+                .statusCode(200)
+                .extract()
                 .as(User[].class);
 
         assertThat(users.length, equalTo(30));
@@ -19,7 +22,12 @@ public class RefactoredGithubAPITests {
 
     @Test
     public void updateUserProject() {
-        long projectId = 12201074;
+        Project project = new GithubAPIRequestService()
+                .createUserProjectRequest("create-project")
+                .as(Project.class);
+
+        long projectId = project.id;
+
         String updatedName = "closed-rest-assured-test-project";
         String updatedState = "closed";
 
@@ -49,7 +57,12 @@ public class RefactoredGithubAPITests {
 
     @Test
     public void deleteUserProject() {
-        long projectId = 12201074;
+        Project project = new GithubAPIRequestService()
+                .createUserProjectRequest("create-project")
+                .as(Project.class);
+
+        long projectId = project.id;
+
         new GithubAPIRequestService().deleteUserProjectRequest(projectId).then().statusCode(204);
     }
 }
